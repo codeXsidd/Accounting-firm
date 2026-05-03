@@ -15,14 +15,96 @@ const STATUS_CONFIG: Record<ClientStatus, { label: string; cls: string }> = {
   'Completed':          { label: 'Completed',          cls: 'status-completed' },
 };
 
-/* Simulated Brevo email send */
+/* Real Brevo (Sendinblue) transactional email */
 async function sendBrevoEmail(client: Client, onboardingUrl: string) {
-  console.log('📧 [Brevo API] Sending onboarding email...');
-  console.log('  To:', client.email);
-  console.log('  Subject: Welcome! Let\'s Begin Your Onboarding');
-  console.log('  Onboarding Link:', onboardingUrl);
-  await new Promise((r) => setTimeout(r, 1200));
-  console.log('✅ [Brevo API] Email sent successfully');
+  const apiKey = import.meta.env.VITE_BREVO_API_KEY as string;
+
+  const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#0f172a;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:linear-gradient(145deg,#1e293b,#0f172a);border:1px solid #334155;border-radius:16px;overflow:hidden;">
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:32px 40px;text-align:center;">
+            <div style="font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">⚡ ClientFlow</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:4px;">Automated Onboarding · Accounting Firms</div>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:40px;">
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#f8fafc;">Welcome, ${client.name}! 👋</h1>
+            <p style="margin:0 0 24px;font-size:15px;color:#94a3b8;line-height:1.6;">
+              Your account has been set up and your onboarding is ready to begin. Complete your intake form, upload your documents, and you'll be all set.
+            </p>
+            <!-- CTA Button -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
+              <tr>
+                <td align="center" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;padding:14px 32px;">
+                  <a href="${onboardingUrl}" style="color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;display:block;">
+                    🚀 Start Onboarding →
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <!-- Steps preview -->
+            <div style="background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:20px;margin-bottom:24px;">
+              <div style="font-size:12px;font-weight:600;color:#6366f1;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">What to expect:</div>
+              ${['📋 Complete your intake form (5 minutes)', '📁 Upload required documents', '✍️ Sign & submit digitally', '🎉 Your account goes live'].map((s, i) => `
+              <div style="display:flex;align-items:center;padding:6px 0;font-size:13px;color:#cbd5e1;">
+                <span style="color:#6366f1;font-weight:700;margin-right:10px;">${i + 1}.</span>${s}
+              </div>`).join('')}
+            </div>
+            <p style="margin:0;font-size:13px;color:#475569;line-height:1.6;">
+              If you have any questions, reply to this email and our team will be happy to help.<br>
+              <strong style="color:#94a3b8;">— The ClientFlow Team</strong>
+            </p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="background:#0a0f1e;padding:20px 40px;text-align:center;border-top:1px solid #1e293b;">
+            <p style="margin:0;font-size:12px;color:#334155;">
+              This email was sent to <strong style="color:#475569;">${client.email}</strong>. If you did not expect this, please ignore it.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  console.log('📧 [Brevo API] Sending real email to', client.email);
+
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': apiKey,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: { name: 'ClientFlow Onboarding', email: 'onboarding@clientflow.io' },
+      to: [{ email: client.email, name: client.name }],
+      subject: "Welcome! Let's Begin Your Onboarding 🚀",
+      htmlContent: htmlBody,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    console.error('❌ [Brevo API] Error:', err);
+    throw new Error(`Brevo API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log('✅ [Brevo API] Email sent! Message ID:', data.messageId);
+  return data;
 }
 
 interface Toast {
@@ -69,7 +151,11 @@ export const Dashboard = () => {
 
     // Simulate email
     addToast({ type: 'info', title: 'Sending Email…', message: `Triggering Brevo API for ${client.name}` });
-    await sendBrevoEmail(client, onboardingUrl);
+    try {
+      await sendBrevoEmail(client, onboardingUrl);
+    } catch (err) {
+      addToast({ type: 'warning', title: '⚠️ Email Error', message: String(err) });
+    }
 
     // Add timeline event
     updated = addTimelineEvent(client.id, { label: 'Welcome email sent via Brevo', type: 'email' });
