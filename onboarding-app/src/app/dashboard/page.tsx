@@ -39,6 +39,7 @@ export default function Dashboard() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [autoPolling, setAutoPolling] = useState(false);
   const [lastPoll, setLastPoll] = useState<string>('');
+  const [nextPollIn, setNextPollIn] = useState<number>(0);
 
   const fetchClients = useCallback(async () => {
     const res = await fetch('/api/clients');
@@ -49,13 +50,32 @@ export default function Dashboard() {
   useEffect(() => { fetchClients(); }, [fetchClients]);
 
   useEffect(() => {
-    if (!autoPolling) return;
+    if (!autoPolling) {
+      setNextPollIn(0);
+      return;
+    }
+    
+    setNextPollIn(10);
     const id = setInterval(async () => {
-      await triggerPoll();
-      await fetchClients();
-    }, 10000);
+      setNextPollIn(prev => {
+        if (prev <= 1) {
+          triggerPoll().then(() => fetchClients());
+          return 10;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
     return () => clearInterval(id);
   }, [autoPolling, fetchClients]);
+
+  // Clear poll status after 8 seconds
+  useEffect(() => {
+    if (pollStatus) {
+      const timer = setTimeout(() => setPollStatus(null), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [pollStatus]);
 
   const triggerPoll = async () => {
     setPolling(true);
@@ -98,9 +118,12 @@ export default function Dashboard() {
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
           {lastPoll && <span style={{ fontSize:12, color:'rgba(255,255,255,0.35)' }}>Last polled: {lastPoll}</span>}
-          <button onClick={()=>setAutoPolling(p=>!p)} style={{ padding:'8px 16px', borderRadius:10, border:`1px solid ${autoPolling?'rgba(16,185,129,0.4)':'rgba(255,255,255,0.1)'}`, background: autoPolling?'rgba(16,185,129,0.1)':'rgba(255,255,255,0.04)', color: autoPolling?'#34d399':'rgba(255,255,255,0.6)', fontSize:13, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+          <button onClick={()=>setAutoPolling(p=>!p)} style={{ padding:'8px 16px', borderRadius:10, border:`1px solid ${autoPolling?'rgba(16,185,129,0.4)':'rgba(255,255,255,0.1)'}`, background: autoPolling?'rgba(16,185,129,0.1)':'rgba(255,255,255,0.04)', color: autoPolling?'#34d399':'rgba(255,255,255,0.6)', fontSize:13, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:8, position: 'relative', overflow: 'hidden' }}>
+            {autoPolling && (
+              <div style={{ position: 'absolute', bottom: 0, left: 0, height: 2, background: '#10b981', width: `${(nextPollIn / 10) * 100}%`, transition: 'width 1s linear' }} />
+            )}
             <span style={{ width:7, height:7, borderRadius:'50%', background: autoPolling?'#10b981':'#64748b', ...(autoPolling?{animation:'pulse 1.5s ease-in-out infinite'}:{}) }} />
-            {autoPolling ? 'Auto-Poll ON' : 'Auto-Poll OFF'}
+            {autoPolling ? `Auto-Poll: ${nextPollIn}s` : 'Auto-Poll OFF'}
           </button>
           <button onClick={async()=>{await triggerPoll();await fetchClients();}} disabled={polling} style={{ padding:'8px 18px', borderRadius:10, background:'linear-gradient(135deg,#6366f1,#8b5cf6)', border:'none', color:'white', fontSize:13, fontWeight:600, cursor:'pointer', opacity:polling?0.7:1, display:'flex', alignItems:'center', gap:6 }}>
             {polling ? '⏳ Polling...' : '🔄 Poll Notion'}

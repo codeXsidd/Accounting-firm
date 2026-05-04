@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { saveClient, sendOnboardingEmail } from '@/lib/onboarding-service';
 
 // Notion poll endpoint - fetches DB and triggers onboarding for new deals
 export async function GET() {
@@ -49,9 +50,12 @@ export async function GET() {
     const triggered: string[] = [];
     const errors: string[] = [];
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
     for (const page of pages) {
       try {
-        const props = page.properties;
+        const props = (page as any).properties;
         
         // Skip if already in progress or completed
         const status = props['Onboarding Status']?.select?.name || '';
@@ -93,49 +97,28 @@ export async function GET() {
         });
         if (!notionUpdate.ok) console.error('Failed to update Notion status:', await notionUpdate.text());
 
-        // 2. Upsert client in Supabase
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-        console.log(`Saving client to Supabase via ${appUrl}/api/save-client...`);
-        const saveRes = await fetch(
-          `${appUrl}/api/save-client`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: clientName,
-              email,
-              notion_page_id: page.id,
-              status: 'In Progress',
-            }),
-          }
-        );
-
-        if (!saveRes.ok) {
-          const saveErr = await saveRes.text();
-          console.error('Save Client Error:', saveErr);
-          errors.push(`Failed to save client ${clientName}: ${saveErr}`);
-          continue;
-        }
-
-        const { client } = await saveRes.json();
-
-        // 3. Send onboarding email
-        console.log(`Sending email to ${email} via ${appUrl}/api/send-email...`);
-        const emailRes = await fetch(`${appUrl}/api/send-email`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            clientId: client.id,
-            clientName,
-            email,
-          }),
+        // 2. Save client directly to Supabase via service logic
+        console.log(`Saving client ${clientName} to Supabase...`);
+        const { client } = await saveClient({
+          name: clientName,
+          email,
+          notion_page_id: page.id,
+          status: 'In Progress',
         });
-        if (!emailRes.ok) console.error('Send Email Error:', await emailRes.text());
+
+        // 3. Send onboarding email directly via service logic
+        console.log(`Sending onboarding email to ${email}...`);
+        await sendOnboardingEmail({
+          clientId: client.id,
+          clientName,
+          email,
+          appUrl,
+        });
 
         triggered.push(clientName);
-      } catch (err) {
+      } catch (err: any) {
         console.error(`Error processing page ${page.id}:`, err);
-        errors.push(`Error processing page ${page.id}: ${err}`);
+        errors.push(`Error processing page ${page.id}: ${err.message || String(err)}`);
       }
     }
 
@@ -146,10 +129,10 @@ export async function GET() {
       errors,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Polling internal error:', error);
     return NextResponse.json(
-      { error: String(error) },
+      { error: error.message || String(error) },
       { status: 500 }
     );
   }
