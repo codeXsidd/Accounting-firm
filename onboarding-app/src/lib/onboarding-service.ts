@@ -56,16 +56,27 @@ export async function sendOnboardingEmail(params: {
   clientId: string;
   clientName: string;
   email: string;
-  appUrl: string;
+  appUrl?: string;
 }) {
-  const { clientId, clientName, email, appUrl } = params;
+  const { clientId, clientName, email } = params;
   const brevoApiKey = process.env.BREVO_API_KEY;
 
   if (!brevoApiKey) {
     throw new Error('Brevo API key not configured');
   }
 
-  const onboardingLink = `${appUrl}/onboarding/${clientId}`;
+  // Robust appUrl detection
+  let finalAppUrl = params.appUrl || process.env.NEXT_PUBLIC_APP_URL || '';
+  
+  // If we're on production (Vercel) but the URL is localhost, override it
+  if ((finalAppUrl.includes('localhost') || !finalAppUrl) && process.env.VERCEL_URL) {
+    finalAppUrl = `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Fallback to localhost if nothing else found
+  if (!finalAppUrl) finalAppUrl = 'http://localhost:3000';
+
+  const onboardingLink = `${finalAppUrl}/onboarding/${clientId}`;
   const htmlContent = buildOnboardingEmailHtml(clientName, onboardingLink);
 
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {

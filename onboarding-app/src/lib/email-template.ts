@@ -1,249 +1,80 @@
 export function buildOnboardingEmailHtml(clientName: string, onboardingLink: string): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Welcome to Your Onboarding</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #0a0a0f 0%, #0d1117 50%, #0a0a0f 100%);
-      min-height: 100vh;
-      padding: 40px 20px;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    .logo {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-    .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      border-radius: 10px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-    .logo-text {
-      font-size: 22px;
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: -0.5px;
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.04);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 24px;
-      padding: 40px;
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      color: #818cf8;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 14px;
-      border-radius: 100px;
-      margin-bottom: 24px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-    h1 {
-      font-size: 28px;
-      font-weight: 700;
-      color: #ffffff;
-      line-height: 1.3;
-      margin-bottom: 16px;
-    }
-    h1 span {
-      background: linear-gradient(135deg, #6366f1, #a78bfa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .subtitle {
-      font-size: 16px;
-      color: rgba(255,255,255,0.55);
-      line-height: 1.7;
-      margin-bottom: 32px;
-    }
-    .steps {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 32px;
-    }
-    .steps-title {
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 16px;
-    }
-    .step {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .step:last-child { border-bottom: none; }
-    .step-num {
-      width: 28px;
-      height: 28px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      color: white;
-      flex-shrink: 0;
-    }
-    .step-text {
-      font-size: 14px;
-      color: rgba(255,255,255,0.7);
-    }
-    .cta-btn {
-      display: block;
-      width: 100%;
-      text-align: center;
-      padding: 18px 32px;
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      color: #ffffff !important;
-      text-decoration: none;
-      font-size: 16px;
-      font-weight: 700;
-      border-radius: 14px;
-      letter-spacing: 0.3px;
-      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
-      transition: all 0.3s ease;
-      margin-bottom: 20px;
-    }
-    .link-note {
-      font-size: 12px;
-      color: rgba(255,255,255,0.3);
-      text-align: center;
-    }
-    .link-note a {
-      color: rgba(99, 102, 241, 0.8);
-      word-break: break-all;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 32px;
-      padding-top: 24px;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      font-size: 12px;
-      color: rgba(255,255,255,0.25);
-      line-height: 1.8;
-    }
-    .divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
-      margin: 28px 0;
-    }
-    .time-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 24px;
-    }
+    body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0a0a0f; color: #ffffff; }
+    img { outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+    table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    .cta-btn:hover { background-color: #7c3aed !important; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="logo">
-        <span class="logo-icon">⚡</span>
-        <span class="logo-text">AccountFlow Pro</span>
-      </div>
-    </div>
-    
-    <div class="card">
-      <div class="badge">🎉 Deal Closed</div>
-      
-      <h1>Welcome aboard, <span>${clientName}</span>!</h1>
-      
-      <p class="subtitle">
-        We're thrilled to have you as a client. Your account has been set up and 
-        you're ready to complete your onboarding. This process takes about 
-        <strong style="color: rgba(255,255,255,0.7)">10–15 minutes</strong>.
-      </p>
-      
-      <div class="time-badge">
-        ⏱ Estimated time: 10–15 minutes
-      </div>
+<body style="background-color: #0a0a0f; padding: 40px 10px;">
+  <center>
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #0a0a0f;">
+      <tr>
+        <td align="center" style="padding-bottom: 30px;">
+          <table border="0" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 10px; width: 40px; height: 40px; text-align: center; font-size: 20px;">⚡</td>
+              <td style="padding-left: 12px; font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">AccountFlow Pro</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="background-color: #11111a; border: 1px solid #22222e; border-radius: 24px; padding: 40px;">
+          <table width="100%" border="0" cellpadding="0" cellspacing="0">
+            <tr>
+              <td>
+                <div style="display: inline-block; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #818cf8; font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 24px;">🎉 Deal Closed</div>
+                <h1 style="font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 16px; line-height: 1.3;">Welcome aboard, <span style="color: #818cf8;">${clientName}</span>!</h1>
+                <p style="font-size: 16px; color: #94a3b8; line-height: 1.6; margin-bottom: 30px;">We're thrilled to have you as a client. Your account has been set up and you're ready to complete your onboarding in about 10–15 minutes.</p>
+                
+                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #1a1a24; border: 1px solid #2a2a35; border-radius: 16px; padding: 24px; margin-bottom: 30px;">
+                  <tr><td style="padding-bottom: 15px; font-size: 11px; font-weight: 700; color: #55556b; text-transform: uppercase; letter-spacing: 1px;">What you'll complete</td></tr>
+                  ${[
+                    { n:1, t:'Client Type Selection' },
+                    { n:2, t:'Personal & Business Information' },
+                    { n:3, t:'Tax & Compliance Details' },
+                    { n:4, t:'Financial Information' },
+                    { n:5, t:'Document Upload & Signature' }
+                  ].map(s => `
+                  <tr>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #22222e;">
+                      <table border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 8px; width: 26px; height: 26px; text-align: center; color: #ffffff; font-size: 12px; font-weight: 700;">${s.n}</td>
+                          <td style="padding-left: 12px; font-size: 14px; color: #cbd5e1;">${s.t}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  `).join('')}
+                </table>
 
-      <div class="steps">
-        <p class="steps-title">What you'll complete</p>
-        <div class="step">
-          <span class="step-num">1</span>
-          <span class="step-text">Client Type Selection</span>
-        </div>
-        <div class="step">
-          <span class="step-num">2</span>
-          <span class="step-text">Personal & Business Information</span>
-        </div>
-        <div class="step">
-          <span class="step-num">3</span>
-          <span class="step-text">Tax & Compliance Details</span>
-        </div>
-        <div class="step">
-          <span class="step-num">4</span>
-          <span class="step-text">Financial Information</span>
-        </div>
-        <div class="step">
-          <span class="step-num">5</span>
-          <span class="step-text">Document Upload & Signature</span>
-        </div>
-      </div>
-      
-      <a href="${onboardingLink}" class="cta-btn">
-        🚀 &nbsp; Start My Onboarding
-      </a>
-      
-      <p class="link-note">
-        Or copy this link: <a href="${onboardingLink}">${onboardingLink}</a>
-      </p>
-      
-      <div class="divider"></div>
-      
-      <p style="font-size: 13px; color: rgba(255,255,255,0.35); text-align: center;">
-        This link is unique to your account. Please don't share it with others.
-      </p>
-    </div>
-    
-    <div class="footer">
-      <p>AccountFlow Pro &mdash; Automated Client Onboarding</p>
-      <p>© ${new Date().getFullYear()} AccountFlow Pro. All rights reserved.</p>
-      <p style="margin-top: 8px;">
-        If you have questions, reply to this email or contact <a href="mailto:support@yourfirm.com" style="color: rgba(99,102,241,0.6)">support@yourfirm.com</a>
-      </p>
-    </div>
-  </div>
+                <a href="${onboardingLink}" style="display: block; width: 100%; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #ffffff; text-decoration: none; padding: 18px 0; border-radius: 14px; font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 20px;">🚀 Start My Onboarding</a>
+                
+                <p style="font-size: 12px; color: #475569; text-align: center; line-height: 1.5;">
+                  Or copy this link:<br/>
+                  <a href="${onboardingLink}" style="color: #6366f1; text-decoration: none; word-break: break-all;">${onboardingLink}</a>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td align="center" style="padding-top: 30px; font-size: 12px; color: #475569; line-height: 1.8;">
+          <p>AccountFlow Pro &mdash; Automated Client Onboarding</p>
+          <p>© ${new Date().getFullYear()} AccountFlow Pro. All rights reserved.</p>
+        </td>
+      </tr>
+    </table>
+  </center>
 </body>
 </html>`;
 }
